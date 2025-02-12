@@ -6,7 +6,6 @@ import { setAccountAddress } from "../Redux/CreateSlice";
 import { useState, useEffect } from "react";
 
 export default function Contract() {
-  const Window = window as any;
   const [address, setAddress] = useState<string | null>(
     typeof window !== "undefined" ? sessionStorage.getItem("walletAddress") : null
   ); // Get address from sessionStorage
@@ -23,13 +22,13 @@ export default function Contract() {
       }
     };
 
-    if (Window.ethereum) {
-      Window.ethereum.on("accountsChanged", handleAccountsChanged);
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
     }
 
     return () => {
-      if (Window.ethereum) {
-        Window.ethereum.removeListener("accountsChanged", handleAccountsChanged); // Clean up listener
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged); // Clean up listener
       }
     };
   }, []);
@@ -38,22 +37,21 @@ export default function Contract() {
     try {
       setLoading(true);
 
-      if (!Window.ethereum) {
+      if (!window.ethereum) {
         alert("MetaMask not detected. Please install MetaMask.");
         setLoading(false);
         return;
       }
 
       // Request accounts from MetaMask
-      await Window.ethereum.request({ method: "eth_requestAccounts" });
+      await window.ethereum.request({ method: "eth_requestAccounts" });
 
-      const provider = new ethers.BrowserProvider(Window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const walletAddress = await signer.getAddress();
 
       setAddress(walletAddress); // Update address after click
       dispatch(setAccountAddress(walletAddress));
-      console.log("wallet address:",walletAddress)
 
       // Store the address in sessionStorage
       sessionStorage.setItem("walletAddress", walletAddress);
@@ -65,12 +63,8 @@ export default function Contract() {
         window.location.reload();
       }, 1000);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error connecting to MetaMask:", error);
-
-      if (error.code === -32002) {
-        alert("MetaMask is already requesting login. Please open MetaMask.");
-      }
     } finally {
       setLoading(false);
     }
