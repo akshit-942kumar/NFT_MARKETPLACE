@@ -7,7 +7,6 @@ const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
 
   const buyNFT = async () => {
     if (!window.ethereum) {
@@ -26,21 +25,25 @@ const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
 
       await tx.wait(); // Wait for transaction to complete
       setShowModal(true); // Show modal after success
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error buying NFT:", error);
 
-      // Check if the error is due to insufficient funds
-      if (
-        error?.reason?.includes("insufficient funds") ||
-        error?.message?.includes("insufficient funds")
-      ) {
-        setError(
-          "You don't have enough Ether to buy this NFT. Please add more funds to your wallet."
-        );
+      // Check if the error is an instance of Error
+      if (error instanceof Error) {
+        // Check for insufficient funds error
+        if (
+          error.message.includes("insufficient funds")
+        ) {
+          setError(
+            "You don't have enough Ether to buy this NFT. Please add more funds to your wallet."
+          );
+        } else {
+          setError(
+            "An error occurred while processing the transaction. Please try again."
+          );
+        }
       } else {
-        setError(
-          "An error occurred while processing the transaction. Please try again."
-        );
+        setError("An unknown error occurred.");
       }
     } finally {
       setLoading(false);
@@ -69,25 +72,24 @@ const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
 
       {/* Error Message at Top of Screen */}
       {error && (
-  <motion.div
-    initial={{ opacity: 0, y: -50 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -50 }}
-    transition={{ type: "spring", stiffness: 150, delay: 0.2 }}
-    className="fixed inset-0 flex m-4 items-center justify-center z-50"
-  >
-    <div className="bg-red-600 text-white p-6 rounded-lg shadow-lg w-[30rem] text-center">
-      <div className="mb-4">{error}</div>
-      <button
-        onClick={handleCloseError}
-        className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition duration-300"
-      >
-        OK
-      </button>
-    </div>
-  </motion.div>
-)}
-
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          transition={{ type: "spring", stiffness: 150, delay: 0.2 }}
+          className="fixed inset-0 flex m-4 items-center justify-center z-50"
+        >
+          <div className="bg-red-600 text-white p-6 rounded-lg shadow-lg w-[30rem] text-center">
+            <div className="mb-4">{error}</div>
+            <button
+              onClick={handleCloseError}
+              className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition duration-300"
+            >
+              OK
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Modal Popup for Successful Purchase */}
       {showModal && (
