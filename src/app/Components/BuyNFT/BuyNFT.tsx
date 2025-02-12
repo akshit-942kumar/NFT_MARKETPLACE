@@ -18,8 +18,8 @@ const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
       const contract = await getContract();
 
       const tx = await contract.createMarketSale(nftId, {
-        value: ethers.parseEther(price.toString()), // Send exact price
-        gasLimit: 6721975, // Adjust gas limit if needed
+        value: ethers.parseEther(price.toString()) // Send exact price
+         // Adjust gas limit if needed
       });
 
       await tx.wait(); // Wait for transaction to complete

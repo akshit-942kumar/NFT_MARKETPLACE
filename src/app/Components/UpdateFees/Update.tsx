@@ -33,8 +33,8 @@ export default function UpdateListingFeeButton() {
 
       // Call the contract function to update the listing price
       const tx = await contract.UpdateListingPrice(ethers.parseEther(newListingFee), {
-        value: ethers.parseEther(newListingFee), // Sending the value along with the transaction
-        gasLimit: 6721975,  // Adjust gas limit if necessary
+        value: ethers.parseEther(newListingFee) // Sending the value along with the transaction
+        // gasLimit: 6721975,  // Adjust gas limit if necessary
       });
 
       await tx.wait();  // Wait for the transaction to be mined

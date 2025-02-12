@@ -40,7 +40,7 @@ function ResellContent() {
 
       const transaction = await contract.resellNFT(Id, priceInEther, {
         value: ListingPrice,
-        gasLimit: 6721975,
+       
       });
 
       await transaction.wait();

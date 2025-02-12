@@ -6,6 +6,7 @@ import { setAccountAddress } from "../Redux/CreateSlice";
 import { useState, useEffect } from "react";
 
 export default function Contract() {
+  const Window = window as any;
   const [address, setAddress] = useState<string | null>(
     typeof window !== "undefined" ? sessionStorage.getItem("walletAddress") : null
   ); // Get address from sessionStorage
@@ -22,13 +23,13 @@ export default function Contract() {
       }
     };
 
-    if (window.ethereum) {
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
+    if (Window.ethereum) {
+      Window.ethereum.on("accountsChanged", handleAccountsChanged);
     }
 
     return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener("accountsChanged", handleAccountsChanged); // Clean up listener
+      if (Window.ethereum) {
+        Window.ethereum.removeListener("accountsChanged", handleAccountsChanged); // Clean up listener
       }
     };
   }, []);
@@ -37,21 +38,22 @@ export default function Contract() {
     try {
       setLoading(true);
 
-      if (!window.ethereum) {
+      if (!Window.ethereum) {
         alert("MetaMask not detected. Please install MetaMask.");
         setLoading(false);
         return;
       }
 
       // Request accounts from MetaMask
-      await window.ethereum.request({ method: "eth_requestAccounts" });
+      await Window.ethereum.request({ method: "eth_requestAccounts" });
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(Window.ethereum);
       const signer = await provider.getSigner();
       const walletAddress = await signer.getAddress();
 
       setAddress(walletAddress); // Update address after click
       dispatch(setAccountAddress(walletAddress));
+      console.log("wallet address:",walletAddress)
 
       // Store the address in sessionStorage
       sessionStorage.setItem("walletAddress", walletAddress);
@@ -63,8 +65,12 @@ export default function Contract() {
         window.location.reload();
       }, 1000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error connecting to MetaMask:", error);
+
+      if (error.code === -32002) {
+        alert("MetaMask is already requesting login. Please open MetaMask.");
+      }
     } finally {
       setLoading(false);
     }
@@ -91,7 +97,7 @@ export default function Contract() {
         ) : pendingAddress ? (
           // If account has been changed but not yet clicked, show pending address
           <span>
-            <span className="text-black">Switching to:</span>
+            <span className="text-black">Connecting:</span>
             <span>{` ${pendingAddress.slice(0, 6)}...${pendingAddress.slice(-4)}`}</span>
           </span>
         ) : (

@@ -74,8 +74,8 @@ const NFTPage = () => {
       
       // Call the smart contract's createNFT function
       const transaction = await get.createNFT(metadataUrl, priceInEther,{
-        value:price,
-       gasLimit:6721975
+        value:price
+       
         // Send the payment with the transaction in Ether
       });
 
