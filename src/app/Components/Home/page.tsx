@@ -3,21 +3,22 @@ import { motion } from "framer-motion"; // Import framer-motion for animations
 import Contract from "@/app/GetContract/Contract";
 import Link from "next/link";
 import UpdateListingFeeButton from "../UpdateFees/Update";
-import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 export default function Home() {
   const owner =process.env.NEXT_PUBLIC_OWNER_ADDRESS
-  const [address,setAddress]=useState<string>()
-  async function get(){
-  const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const walletAddress = await signer.getAddress();
-        setAddress(walletAddress)
+  const Address = 
+    typeof window !== "undefined" ? sessionStorage.getItem("walletAddress") : null
 
-  }
+  const[update,setUpdate]=useState<boolean>(false)
+
+
   useEffect(()=>{
-    get()
+   
+    if(owner==Address){
+      setUpdate(true)
+    }
   },[])
+  
 
   
   return (
@@ -28,10 +29,10 @@ export default function Home() {
       </div>
 
       {/* Position the Update Listing Fee button below the contract button */}
-      { owner==address ? 
-        (<div className="absolute top-20 right-6 z-20">
+      {  update &&(
+        <div className="absolute top-20 right-6 z-20">
         <UpdateListingFeeButton />
-      </div>) :(null)
+      </div>) 
 
       }
       
