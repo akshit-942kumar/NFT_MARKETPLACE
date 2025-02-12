@@ -1,52 +1,63 @@
 import { ethers } from "ethers";
 import { useState } from "react";
 import getContract from "@/app/GetContract/GetData";
+import { motion } from "framer-motion";
 
 const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
   const [loading, setLoading] = useState(false);
-  // const [success, setSuccess] = useState(false);  // State to control success popup visibility
-  const [showModal, setShowModal] = useState(false);  // State to toggle modal visibility
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
 
   const buyNFT = async () => {
     if (!window.ethereum) {
-      alert("MetaMask is required to buy NFTs.");
+      setError("MetaMask is required to buy NFTs.");
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
       const contract = await getContract();
 
       const tx = await contract.createMarketSale(nftId, {
-        value: ethers.parseEther(price.toString()) // Send exact price
-         // Adjust gas limit if needed
+        value: ethers.parseEther(price.toString()),
       });
 
       await tx.wait(); // Wait for transaction to complete
-      // setSuccess(true);  // Set success state to true
-      setShowModal(true);  // Show modal after success
-
-      // Optionally reload the page after a few seconds (not immediately)
-      // setTimeout(() => {
-      //   window.location.reload(); // Reload the page after 1 second delay
-      // }, 3000); // Delay 3 seconds before page reload
-
-    } catch (error) {
+      setShowModal(true); // Show modal after success
+    } catch (error: any) {
       console.error("Error buying NFT:", error);
+
+      // Check if the error is due to insufficient funds
+      if (
+        error?.reason?.includes("insufficient funds") ||
+        error?.message?.includes("insufficient funds")
+      ) {
+        setError(
+          "You don't have enough Ether to buy this NFT. Please add more funds to your wallet."
+        );
+      } else {
+        setError(
+          "An error occurred while processing the transaction. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleCloseModal = () => {
-    setShowModal(false);  // Hide the modal
-    // Reload the page 1 second after closing the modal
+    setShowModal(false);
+    window.location.reload(); // Reload the page after closing the modal
+  };
 
-      window.location.reload(); // 1 second delay before reloading
+  const handleCloseError = () => {
+    setError(null); // Close the error message
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-lg relative">
+    <div className="bg-gray-800 p-4 rounded-lg shadow-lg relative text-white">
       {/* NFT Card Container */}
       <button
         onClick={buyNFT}
@@ -56,14 +67,40 @@ const BuyNFTButton = ({ nftId, price }: { nftId: number, price: string }) => {
         {loading ? "Processing..." : "Buy Now"}
       </button>
 
+      {/* Error Message at Top of Screen */}
+      {error && (
+  <motion.div
+    initial={{ opacity: 0, y: -50 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -50 }}
+    transition={{ type: "spring", stiffness: 150, delay: 0.2 }}
+    className="fixed inset-0 flex m-4 items-center justify-center z-50"
+  >
+    <div className="bg-red-600 text-white p-6 rounded-lg shadow-lg w-[30rem] text-center">
+      <div className="mb-4">{error}</div>
+      <button
+        onClick={handleCloseError}
+        className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition duration-300"
+      >
+        OK
+      </button>
+    </div>
+  </motion.div>
+)}
+
+
       {/* Modal Popup for Successful Purchase */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-gray-800 text-white p-6 rounded-lg shadow-xl w-96">
-            <h2 className="text-2xl font-bold text-center mb-4">NFT Purchased Successfully!</h2>
-            <p className="text-center">You have successfully purchased this NFT. </p>
+            <h2 className="text-2xl font-bold text-center mb-4">
+              NFT Purchased Successfully!
+            </h2>
+            <p className="text-center">
+              You have successfully purchased this NFT.
+            </p>
             <button
-              onClick={handleCloseModal}  // Close the modal and reload the page after 1 second
+              onClick={handleCloseModal}
               className="w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               Close

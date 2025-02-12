@@ -38,7 +38,7 @@ export default function Contract() {
       setLoading(true);
 
       if (!window.ethereum) {
-        alert("MetaMask not detected. Please install MetaMask.");
+        alert("MetaMask not detected or you are not logged in. Please install MetaMask or log in first.");
         setLoading(false);
         return;
       }
